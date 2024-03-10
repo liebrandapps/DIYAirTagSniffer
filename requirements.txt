@@ -1,0 +1,4 @@
+bluepy==1.3.0
+paho_mqtt==2.0.0
+psutil==5.9.8
+pycryptodome==3.20.0
