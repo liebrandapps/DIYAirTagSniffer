@@ -183,6 +183,10 @@ class AirTag:
         self._history[when] = {'lat': latitude, 'lon': longitude}
         self._needsSave = True
 
+    @lastSeen.setter
+    def lastSeen(self, value):
+        self._lastSeen = value
+
     @property
     def history(self):
         return self._history

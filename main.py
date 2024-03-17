@@ -10,6 +10,7 @@ import logging
 import secrets
 import signal
 import sys
+from datetime import datetime
 from hmac import HMAC
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from logging.handlers import RotatingFileHandler
@@ -80,7 +81,6 @@ def loadAirTags():
     for t in tags:
         airtag = AirTag(ctx, jsonFile=t)
         ctx.airtags[airtag.id] = airtag
-
 
 
 def getKey():
@@ -217,10 +217,13 @@ if __name__ == '__main__':
 
     log.info(f"[{APP}] Start scanning for devices")
     duration = cfg.airtag_scanDuration
+    locationUpdate = cfg.airtag_locationUpdate
+    unknownTags = {}
     while not doTerminate:
         try:
             scanner = Scanner()
             devices = scanner.scan(duration)
+            now = datetime.now()
             foundDevices = 0
             for dev in devices:
                 devname = dev.getValueText(btle.ScanEntry.COMPLETE_LOCAL_NAME)
@@ -233,7 +236,7 @@ if __name__ == '__main__':
                 """
                 for (adtype, desc, value) in dev.getScanData():
                     if desc == "Manufacturer" and value[:8] == "4c001219":
-                        print(f"######## AIRTAG FOUND {len(value)}")
+                        # print(f"######## AIRTAG FOUND {len(value)}")
                         if len(value) == 58:
                             hexStatus = value[9]
                             hexKey = dev.addr.replace(":", "") + value[10:54]
@@ -243,18 +246,44 @@ if __name__ == '__main__':
                             bArray = bytearray(bts)
                             bArray[0] = (bArray[0] & 63) + (bt << 6)
                             b64 = base64.b64encode(bytes(bArray)).decode('ascii')
-                            #print(f"full data found (key {b64}")
+                            # print(f"full data found (key {b64}")
                             found = False
+                            dct = None
                             for airtag in ctx.airtags.values():
                                 if b64 == airtag.advertisementKey:
-                                    print(f"Found airtag {airtag.name}")
+                                    if b64 in unknownTags.keys():
+                                        del unknownTags[b64]
+                                    if airtag.lastSeen is None or (now - airtag.lastSeen).total_seconds() > locationUpdate:
+                                        airtag.lastSeen = now
+                                        dct = {'known': True, 'uid': ctx.uid, 'name': airtag.name,
+                                               'tagId': airtag.id,
+                                               'lat': cfg.general_lat, 'lon': cfg.general_lon,
+                                               'location': cfg.general_location,
+                                               'timestamp': now.timestamp()
+                                               }
+                                        log.debug(f"Found airtag {airtag.name}")
                                     found = True
                                     break
                             if not found:
-                                print(f"unknown airtag {b64}")
-                    # print("  %s = %s" % (desc, value))
+                                if b64 not in unknownTags.keys() or (now - unknownTags[b64]).total_seconds() > locationUpdate:
+                                    unknownTags[b64] = now
+                                    dct = {'known': False, 'uid': ctx.uid, 'advKey': b64,
+                                            'lat': cfg.general_lat, 'lon': cfg.general_lon,
+                                            'location': cfg.general_location,
+                                            'timestamp': now.timestamp(),
+                                            'responseTopic': cfg.mqtt_topic + ctx.uid + "/airtag_response"
+                                            }
+                                    log.debug(f"Found unidentified airtag {b64}")
 
-
+                            if dct is not None:
+                                cipher = AES.new(bytes.fromhex(ctx.aesKey), AES.MODE_CTR)
+                                dta = json.dumps(dct)
+                                ciphertext = cipher.encrypt(dta.encode('utf-8'))
+                                req = {}
+                                req['uid'] = ctx.uid
+                                req['encDta'] = base64.b64encode(ciphertext).decode('ascii')
+                                req['nonce'] = base64.b64encode(cipher.nonce).decode('ascii')
+                                mqtt.publish(cfg.mqtt_topicFMG + "location_update", req)
 
         except Exception as e:
             print("scan: Error, ", e)
