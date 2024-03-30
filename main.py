@@ -259,7 +259,8 @@ if __name__ == '__main__':
                                                'tagId': airtag.id,
                                                'lat': cfg.general_lat, 'lon': cfg.general_lon,
                                                'location': cfg.general_location,
-                                               'timestamp': now.timestamp()
+                                               'timestamp': now.timestamp(),
+                                               'status': int(value[8:10], base=16)
                                                }
                                         log.debug(f"Found airtag {airtag.name}")
                                     found = True
