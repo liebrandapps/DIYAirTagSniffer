@@ -150,7 +150,7 @@ if __name__ == '__main__':
             "location": ["String", "Marks Office"],
             "lon": ["Float", 7.4971],
             "lat": ["Float", 46.9756],
-            "pidFile": ["String", "tmp/airtagsniffer.pid"]
+            "pidFile": ["String", "/tmp/airtagsniffer.pid"]
         },
         "logging": {
             "logFile": ["String", "/tmp/airtagsniffer.log"],
