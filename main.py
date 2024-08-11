@@ -288,4 +288,4 @@ if __name__ == '__main__':
                                 mqtt.publish(cfg.mqtt_topicFMG + "location_update", req)
 
         except Exception as e:
-            print("scan: Error, ", e)
+            log.exception("scan: Error")
