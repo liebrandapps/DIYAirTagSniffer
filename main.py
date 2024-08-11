@@ -278,7 +278,7 @@ if __name__ == '__main__':
                                             }
                                     log.debug(f"Found unidentified airtag {b64}")
 
-                            if dct is not None:
+                            if dct is not None and ctx.aesKey is not None:
                                 cipher = AES.new(bytes.fromhex(ctx.aesKey), AES.MODE_CTR)
                                 dta = json.dumps(dct)
                                 ciphertext = cipher.encrypt(dta.encode('utf-8'))
