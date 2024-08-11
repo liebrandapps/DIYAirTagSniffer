@@ -211,15 +211,20 @@ if __name__ == '__main__':
     loadAirTags()
     if cfg.mqtt_enable:
         log.info(f"[{APP}] Using MQTT")
+        log.info(f"[{APP}] Connecting to server {cfg.mqtt_server} with user {cfg.mqtt_user}")
         getKey()
         responseTopic = cfg.mqtt_topic + ctx.uid + "/key_response"
         dct = {'uid': ctx.uid, 'responseTopic': responseTopic}
         mqtt.subscribe(responseTopic, mqttCBKeyResponse)
         mqtt.publish(cfg.mqtt_topicFMG + "key_request", dct)
+    else:
+        log.info(f"[{APP}] NOT Using MQTT")
+    locationUpdate = cfg.airtag_locationUpdate
+    log.info(f"[{APP}] Reporting devices every {locationUpdate} seconds")
+    log.info(f"[{APP}] Location is configured for Latitude {cfg.general_lat} and Longitute {cfg.general_lon}")
 
     log.info(f"[{APP}] Start scanning for devices")
     duration = cfg.airtag_scanDuration
-    locationUpdate = cfg.airtag_locationUpdate
     unknownTags = {}
     while not doTerminate:
         try:
