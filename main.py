@@ -197,6 +197,7 @@ if __name__ == '__main__':
     if log is None:
         sys.exit(-126)
     ctx = Context(cfg, log)
+    ctx.uid = "uid_not_set"
 
     doTerminate = False
     signal.signal(signal.SIGINT, terminate)
