@@ -9,8 +9,6 @@ from datetime import datetime, timedelta
 import paho.mqtt.client as mqtt
 
 
-
-
 class MQTT:
 
     def __init__(self, ctx):
@@ -116,4 +114,3 @@ class MQTT:
 
     def unsubscribe(self, subscribeTopic):
         del self.__subscriber[subscribeTopic]
-

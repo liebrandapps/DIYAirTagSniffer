@@ -149,7 +149,8 @@ if __name__ == '__main__':
             "history": ["Integer", 30],
             "location": ["String", "Marks Office"],
             "lon": ["Float", 7.4971],
-            "lat": ["Float", 46.9756]
+            "lat": ["Float", 46.9756],
+            "pidFile": ["String", "tmp/airtagsniffer.pid"]
         },
         "logging": {
             "logFile": ["String", "/tmp/airtagsniffer.log"],
